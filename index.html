@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Therapy Portal Login</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 400px; margin: 60px auto; }
+    input { width: 100%; padding: 10px; margin: 10px 0; }
+    button { width: 100%; padding: 10px; background: #4CAF50; color: white; border: none; }
+    .msg { margin-top: 15px; color: green; }
+    .error { margin-top: 15px; color: red; }
+  </style>
+</head>
+
+<body>
+
+  <h2>Login</h2>
+
+  <input id="email" type="email" placeholder="Enter your email" />
+
+  <button onclick="login()">Send Login Link</button>
+
+  <div id="message"></div>
+
+  <script>
+    // 1. Supabase client
+    const supabase = supabase.createClient(
+      "YOUR_SUPABASE_URL",
+      "YOUR_PUBLISHABLE_KEY"
+    );
+
+    // 2. Therapist email (hardcoded)
+    const THERAPIST_EMAIL = "therapist@example.com";
+
+    // 3. Login function
+    async function login() {
+      const email = document.getElementById("email").value;
+      const msg = document.getElementById("message");
+
+      msg.innerHTML = "Sending magic link...";
+
+      const { error } = await supabase.auth.signInWithOtp({ email });
+
+      if (error) {
+        msg.innerHTML = "<p class='error'>" + error.message + "</p>";
+      } else {
+        msg.innerHTML = "<p class='msg'>Check your email for the login link.</p>";
+      }
+    }
+
+    // 4. Redirect after login
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        const email = session.user.email;
+
+        if (email === THERAPIST_EMAIL) {
+          window.location.href = "therapist.html";
+        } else {
+          window.location.href = "patient.html";
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>
