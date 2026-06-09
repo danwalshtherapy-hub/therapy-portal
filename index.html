@@ -4,36 +4,110 @@
   <meta charset="UTF-8" />
   <title>Therapy Portal Login</title>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
   <style>
-    body { font-family: Arial, sans-serif; max-width: 400px; margin: 60px auto; }
-    input { width: 100%; padding: 10px; margin: 10px 0; }
-    button { width: 100%; padding: 10px; background: #4CAF50; color: white; border: none; }
-    .msg { margin-top: 15px; color: green; }
-    .error { margin-top: 15px; color: red; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Inter", Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-image: url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1950&q=80');
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+
+    /* Dark overlay */
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(2px);
+    }
+
+    /* Login card */
+    .card {
+      position: relative;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 40px;
+      border-radius: 16px;
+      width: 320px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+      animation: fadeIn 0.8s ease;
+      color: white;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 12px 0;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 15px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      background: #4CAF50;
+      border: none;
+      color: white;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    #message {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 
 <body>
 
-  <h2>Login</h2>
+  <div class="card">
+    <h2>Welcome Back</h2>
+    <p style="text-align:center; opacity:0.8;">Sign in to continue</p>
 
-  <input id="email" type="email" placeholder="Enter your email" />
+    <input id="email" type="email" placeholder="Email address" />
+    <button onclick="login()">Send Login Link</button>
 
-  <button onclick="login()">Send Login Link</button>
-
-  <div id="message"></div>
+    <div id="message"></div>
+  </div>
 
   <script>
-    // 1. Supabase client
     const supabase = supabase.createClient(
       "YOUR_SUPABASE_URL",
       "YOUR_PUBLISHABLE_KEY"
     );
 
-    // 2. Therapist email (hardcoded)
     const THERAPIST_EMAIL = "therapist@example.com";
 
-    // 3. Login function
     async function login() {
       const email = document.getElementById("email").value;
       const msg = document.getElementById("message");
@@ -43,13 +117,12 @@
       const { error } = await supabase.auth.signInWithOtp({ email });
 
       if (error) {
-        msg.innerHTML = "<p class='error'>" + error.message + "</p>";
+        msg.innerHTML = "<span style='color:#ffb3b3'>" + error.message + "</span>";
       } else {
-        msg.innerHTML = "<p class='msg'>Check your email for the login link.</p>";
+        msg.innerHTML = "<span style='color:#b3ffb3'>Check your email for the login link.</span>";
       }
     }
 
-    // 4. Redirect after login
     supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
         const email = session.user.email;
