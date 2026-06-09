@@ -14,6 +14,8 @@
       display: flex;
       justify-content: center;
       align-items: center;
+
+      /* Calming beach background */
       background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1950&q=80');
       background-size: cover;
       background-position: center;
@@ -40,33 +42,29 @@
       box-shadow: 0 8px 30px rgba(0,0,0,0.3);
       animation: fadeIn 0.8s ease;
       color: white;
+      text-align: center; /* Center everything */
     }
 
     h2 {
       margin-top: 0;
       font-weight: 600;
-      text-align: center;
     }
 
-    input {
+    /* Input + button alignment fix */
+    input, button {
       width: 100%;
+      box-sizing: border-box; /* Ensures equal width */
       padding: 12px;
-      margin: 12px 0;
       border-radius: 8px;
       border: none;
-      outline: none;
       font-size: 15px;
+      margin: 12px 0; /* Consistent spacing */
     }
 
     button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
       background: #4CAF50;
-      border: none;
       color: white;
       font-size: 16px;
-      border-radius: 8px;
       cursor: pointer;
       transition: 0.2s;
     }
@@ -92,7 +90,7 @@
 
   <div class="card">
     <h2>Welcome Back</h2>
-    <p style="text-align:center; opacity:0.8;">Sign in to continue</p>
+    <p style="opacity:0.8;">Sign in to continue</p>
 
     <input id="email" type="email" placeholder="Email address" />
     <button onclick="login()">Send Login Link</button>
@@ -138,3 +136,6 @@
 
 </body>
 </html>
+    );
+
+    
