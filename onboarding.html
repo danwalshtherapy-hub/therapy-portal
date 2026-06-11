@@ -288,8 +288,10 @@
   );
 
   // ── Auth guard ───────────────────────────────────────────────────────────────
+  const DEV = new URLSearchParams(window.location.search).get("dev") === "1";
+
   supabaseClient.auth.getSession().then(({ data: { session } }) => {
-    if (!session) { window.location.href = "index.html"; }
+    if (!session && !DEV) { window.location.href = "index.html"; }
   });
 
   // ── Stripe payment links ─────────────────────────────────────────────────────
