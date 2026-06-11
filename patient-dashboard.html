@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>My Dashboard</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Inter", Arial, sans-serif;
+      min-height: 100vh;
+      background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1950&q=80');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      color: white;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(3px);
+      z-index: 0;
+    }
+
+    .page { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 32px 20px; }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+    header h1 { font-size: 22px; font-weight: 600; }
+    header p { font-size: 14px; opacity: 0.7; margin-top: 2px; }
+    .logout-btn {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+    .logout-btn:hover { background: rgba(255,255,255,0.25); }
+
+    /* Cards grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 16px;
+      padding: 24px;
+      backdrop-filter: blur(12px);
+      text-align: center;
+    }
+    .stat-card .number { font-size: 48px; font-weight: 700; line-height: 1; }
+    .stat-card .label { font-size: 13px; opacity: 0.75; margin-top: 6px; }
+    .stat-card.highlight .number { color: #7ee8a2; }
+
+    /* Progress bar */
+    .progress-wrap { margin-top: 12px; background: rgba(255,255,255,0.2); border-radius: 99px; height: 6px; }
+    .progress-bar { height: 6px; border-radius: 99px; background: #7ee8a2; transition: width 0.6s ease; }
+
+    /* Section */
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      opacity: 0.9;
+    }
+
+    /* Session history table */
+    .history-card {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      overflow: hidden;
+    }
+
+    .history-card table { width: 100%; border-collapse: collapse; }
+    .history-card th {
+      text-align: left;
+      padding: 14px 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.6;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .history-card td {
+      padding: 14px 20px;
+      font-size: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .history-card tr:last-child td { border-bottom: none; }
+    .history-card tr:hover td { background: rgba(255,255,255,0.05); }
+
+    /* Status badges */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-completed  { background: rgba(126,232,162,0.2); color: #7ee8a2; border: 1px solid rgba(126,232,162,0.4); }
+    .badge-cancelled  { background: rgba(255,100,100,0.2); color: #ff9e9e; border: 1px solid rgba(255,100,100,0.3); }
+    .badge-rescheduled{ background: rgba(255,200,80,0.2);  color: #ffd97d; border: 1px solid rgba(255,200,80,0.3);  }
+    .badge-scheduled  { background: rgba(100,180,255,0.2); color: #90caff; border: 1px solid rgba(100,180,255,0.3); }
+
+    .next-session {
+      background: rgba(126,232,162,0.12);
+      border: 1px solid rgba(126,232,162,0.3);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .next-session .icon { font-size: 28px; }
+    .next-session strong { font-size: 15px; }
+    .next-session span { font-size: 13px; opacity: 0.75; display: block; margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <header>
+    <div>
+      <h1>Welcome back, <span id="patient-name">Sarah</span></h1>
+      <p id="patient-email">Loading...</p>
+    </div>
+    <button class="logout-btn" onclick="logout()">Sign out</button>
+  </header>
+
+  <!-- Next session banner -->
+  <div class="next-session">
+    <div class="icon">📅</div>
+    <div>
+      <strong>Next session: Thursday 19 June 2026 at 2:00 PM</strong>
+      <span>Video call · 50 minutes · with Dr. James Harlow</span>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card highlight">
+      <div class="number" id="sessions-remaining">3</div>
+      <div class="label">Sessions remaining</div>
+      <div class="progress-wrap" style="margin-top:14px;">
+        <div class="progress-bar" id="progress-bar" style="width: 30%;"></div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="number" id="sessions-completed">7</div>
+      <div class="label">Sessions completed</div>
+    </div>
+    <div class="stat-card">
+      <div class="number" id="sessions-total">10</div>
+      <div class="label">Sessions in package</div>
+    </div>
+  </div>
+
+  <!-- Session history -->
+  <div class="section-title">Session history</div>
+  <div class="history-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Duration</th>
+          <th>Status</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody id="session-history">
+        <!-- Populated by JS below -->
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  const { createClient } = supabase;
+  const supabaseClient = createClient(
+    "https://crdfeaktmahbzwlontup.supabase.co",
+    "sb_publishable_cjevTmosz1gAE_zXRt81CQ_Laq35vIZ"
+  );
+
+  // ── Auth guard ───────────────────────────────────────────────────────────────
+  supabaseClient.auth.getSession().then(({ data: { session } }) => {
+    if (!session) {
+      window.location.href = "index.html";
+      return;
+    }
+    document.getElementById("patient-email").textContent = session.user.email;
+    loadDashboard(session.user);
+  });
+
+  async function logout() {
+    await supabaseClient.auth.signOut();
+    window.location.href = "index.html";
+  }
+
+  // ── Dashboard data ───────────────────────────────────────────────────────────
+  // TODO: Replace mock data with real Supabase queries, e.g.:
+  //   const { data: patient } = await supabaseClient.from("patients").select("*").eq("auth_user_id", user.id).single();
+  //   const { data: sessions } = await supabaseClient.from("sessions").select("*").eq("patient_id", patient.id).order("date", { ascending: false });
+  //   const { data: payments } = await supabaseClient.from("payments").select("sessions_purchased").eq("patient_id", patient.id);
+
+  const MOCK_PATIENT = { name: "Sarah Johnson" };
+  const MOCK_SESSIONS_PURCHASED = 10;
+  const MOCK_SESSIONS = [
+    { date: "2026-06-19", type: "Video call",     duration: "50 min", status: "scheduled",   notes: "—" },
+    { date: "2026-06-05", type: "Video call",     duration: "50 min", status: "completed",   notes: "Discussed coping strategies for work stress" },
+    { date: "2026-05-29", type: "Video call",     duration: "50 min", status: "rescheduled", notes: "Moved from 22 May due to illness" },
+    { date: "2026-05-22", type: "Video call",     duration: "50 min", status: "cancelled",   notes: "Patient unwell" },
+    { date: "2026-05-15", type: "In-person",      duration: "50 min", status: "completed",   notes: "Reviewed progress on sleep hygiene plan" },
+    { date: "2026-05-08", type: "Video call",     duration: "50 min", status: "completed",   notes: "Introduced mindfulness exercises" },
+    { date: "2026-05-01", type: "Video call",     duration: "50 min", status: "completed",   notes: "Follow-up on anxiety journaling" },
+    { date: "2026-04-24", type: "In-person",      duration: "50 min", status: "completed",   notes: "Initial goals discussion" },
+    { date: "2026-04-17", type: "In-person",      duration: "50 min", status: "completed",   notes: "Background and history session" },
+    { date: "2026-04-10", type: "In-person",      duration: "50 min", status: "completed",   notes: "Intake session" },
+  ];
+
+  function loadDashboard(user) {
+    // Patient name
+    document.getElementById("patient-name").textContent = MOCK_PATIENT.name.split(" ")[0];
+
+    // Stats
+    const completed  = MOCK_SESSIONS.filter(s => s.status === "completed").length;
+    const remaining  = MOCK_SESSIONS_PURCHASED - completed;
+    const pct        = Math.round((remaining / MOCK_SESSIONS_PURCHASED) * 100);
+
+    document.getElementById("sessions-completed").textContent = completed;
+    document.getElementById("sessions-remaining").textContent = remaining;
+    document.getElementById("sessions-total").textContent     = MOCK_SESSIONS_PURCHASED;
+    document.getElementById("progress-bar").style.width       = pct + "%";
+
+    // History table
+    const tbody = document.getElementById("session-history");
+    tbody.innerHTML = MOCK_SESSIONS.map(s => `
+      <tr>
+        <td>${formatDate(s.date)}</td>
+        <td>${s.type}</td>
+        <td>${s.duration}</td>
+        <td><span class="badge badge-${s.status}">${capitalise(s.status)}</span></td>
+        <td style="opacity:0.7; font-size:13px;">${s.notes}</td>
+      </tr>
+    `).join("");
+  }
+
+  function formatDate(iso) {
+    return new Date(iso + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  }
+  function capitalise(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+</script>
+
+</body>
+</html>

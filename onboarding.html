@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Get Started</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Inter", Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1950&q=80');
+      background-size: cover;
+      background-position: center;
+      color: white;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(3px);
+      z-index: 0;
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      background: rgba(255,255,255,0.13);
+      border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 20px;
+      padding: 44px 40px;
+      width: 100%;
+      max-width: 480px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+      animation: fadeUp 0.5s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Step indicator */
+    .steps {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+    .step-dot {
+      flex: 1;
+      height: 4px;
+      border-radius: 99px;
+      background: rgba(255,255,255,0.2);
+      transition: background 0.3s;
+    }
+    .step-dot.done    { background: #7ee8a2; }
+    .step-dot.current { background: rgba(255,255,255,0.7); }
+
+    h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+    .subtitle { font-size: 14px; opacity: 0.7; margin-bottom: 28px; line-height: 1.5; }
+
+    label { display: block; font-size: 13px; opacity: 0.8; margin-bottom: 6px; margin-top: 16px; }
+    label:first-of-type { margin-top: 0; }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.12);
+      color: white;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border 0.2s;
+    }
+    input::placeholder, textarea::placeholder { opacity: 0.5; }
+    input:focus, select:focus, textarea:focus  { border-color: rgba(126,232,162,0.6); }
+    select option { background: #1a3a3a; color: white; }
+    textarea { resize: vertical; min-height: 80px; }
+
+    /* Package cards */
+    .packages { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 4px; }
+    .pkg-card {
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: 0.2s;
+      text-align: center;
+    }
+    .pkg-card:hover   { border-color: rgba(126,232,162,0.5); background: rgba(126,232,162,0.08); }
+    .pkg-card.selected{ border-color: #7ee8a2; background: rgba(126,232,162,0.15); }
+    .pkg-card .pkg-sessions { font-size: 28px; font-weight: 700; color: #7ee8a2; }
+    .pkg-card .pkg-label    { font-size: 12px; opacity: 0.7; margin: 2px 0; }
+    .pkg-card .pkg-price    { font-size: 18px; font-weight: 600; margin-top: 8px; }
+    .pkg-card .pkg-saving   { font-size: 11px; color: #ffd97d; margin-top: 2px; }
+
+    /* Pay button */
+    .pay-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: none;
+      background: #7ee8a2;
+      color: #0d2b1e;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 24px;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .pay-btn:hover    { background: #5ed68c; }
+    .pay-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn {
+      width: 100%;
+      padding: 13px;
+      border-radius: 10px;
+      border: none;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 24px;
+      transition: 0.2s;
+    }
+    .btn-primary { background: #7ee8a2; color: #0d2b1e; }
+    .btn-primary:hover { background: #5ed68c; }
+    .btn-secondary {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: white;
+      margin-top: 10px;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+
+    .secure-note {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 12px;
+      opacity: 0.55;
+      margin-top: 12px;
+    }
+
+    /* Success step */
+    .success-icon {
+      width: 72px; height: 72px;
+      background: rgba(126,232,162,0.2);
+      border: 2px solid #7ee8a2;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px;
+      margin: 0 auto 20px;
+    }
+
+    /* Step panels */
+    .step-panel { display: none; }
+    .step-panel.active { display: block; }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- Step indicator: 4 steps -->
+  <div class="steps">
+    <div class="step-dot" id="dot-1"></div>
+    <div class="step-dot" id="dot-2"></div>
+    <div class="step-dot" id="dot-3"></div>
+    <div class="step-dot" id="dot-4"></div>
+  </div>
+
+  <!-- ── Step 1: Choose package & pay ── -->
+  <div class="step-panel" id="step-1">
+    <h2>Welcome</h2>
+    <p class="subtitle">Choose a session package to get started. You'll be taken securely to Stripe to complete payment.</p>
+
+    <div class="packages">
+      <div class="pkg-card" onclick="selectPackage(this, 6, 270)" id="pkg-6">
+        <div class="pkg-sessions">6</div>
+        <div class="pkg-label">sessions</div>
+        <div class="pkg-price">£270</div>
+        <div class="pkg-saving">£45 per session</div>
+      </div>
+      <div class="pkg-card" onclick="selectPackage(this, 10, 420)" id="pkg-10">
+        <div class="pkg-sessions">10</div>
+        <div class="pkg-label">sessions</div>
+        <div class="pkg-price">£420</div>
+        <div class="pkg-saving">Save £30 · £42/session</div>
+      </div>
+    </div>
+
+    <button class="pay-btn" id="pay-btn" disabled onclick="goToStripe()">
+      🔒 Pay securely with Stripe
+    </button>
+    <div class="secure-note">🔐 Powered by Stripe · Your card details are never stored here</div>
+  </div>
+
+  <!-- ── Step 2: Personal details ── -->
+  <div class="step-panel" id="step-2">
+    <h2>Your details</h2>
+    <p class="subtitle">Tell us a little about yourself so we can personalise your experience.</p>
+
+    <div class="field-row">
+      <div>
+        <label>First name</label>
+        <input type="text" id="first-name" placeholder="Sarah" />
+      </div>
+      <div>
+        <label>Last name</label>
+        <input type="text" id="last-name" placeholder="Johnson" />
+      </div>
+    </div>
+
+    <label>Date of birth</label>
+    <input type="date" id="dob" />
+
+    <label>Phone number</label>
+    <input type="tel" id="phone" placeholder="+44 7700 900000" />
+
+    <label>Emergency contact name</label>
+    <input type="text" id="emergency-name" placeholder="Full name" />
+
+    <label>Emergency contact phone</label>
+    <input type="tel" id="emergency-phone" placeholder="+44 7700 900000" />
+
+    <button class="btn btn-primary" onclick="goToStep(3)">Continue</button>
+  </div>
+
+  <!-- ── Step 3: Intake questions ── -->
+  <div class="step-panel" id="step-3">
+    <h2>A few questions</h2>
+    <p class="subtitle">This helps your therapist prepare for your first session. All answers are confidential.</p>
+
+    <label>What brings you to therapy?</label>
+    <textarea id="reason" placeholder="You can be as brief or detailed as you like..."></textarea>
+
+    <label>Have you had therapy before?</label>
+    <select id="prior-therapy">
+      <option value="">Please select</option>
+      <option>No, this is my first time</option>
+      <option>Yes, briefly</option>
+      <option>Yes, for an extended period</option>
+    </select>
+
+    <label>How are you feeling right now? (1 = very low, 10 = great)</label>
+    <input type="range" id="mood" min="1" max="10" value="5"
+      oninput="document.getElementById('mood-val').textContent = this.value"
+      style="padding:0; background:transparent; border:none; cursor:pointer;" />
+    <div style="text-align:center; font-size:22px; font-weight:700; color:#7ee8a2; margin-top:4px;" id="mood-val">5</div>
+
+    <label>Is there anything you'd like your therapist to know before your first session?</label>
+    <textarea id="extra-notes" placeholder="Optional"></textarea>
+
+    <button class="btn btn-primary" onclick="completeOnboarding()">Complete setup</button>
+    <button class="btn btn-secondary" onclick="goToStep(2)">Back</button>
+  </div>
+
+  <!-- ── Step 4: All done ── -->
+  <div class="step-panel" id="step-4">
+    <div class="success-icon">✓</div>
+    <h2 style="text-align:center;">You're all set!</h2>
+    <p class="subtitle" style="text-align:center;">Payment confirmed and your profile is ready. Your therapist will be in touch to schedule your first session.</p>
+    <button class="btn btn-primary" onclick="window.location.href='patient-dashboard.html'">Go to my dashboard</button>
+  </div>
+
+</div>
+
+<script>
+  const { createClient } = supabase;
+  const supabaseClient = createClient(
+    "https://crdfeaktmahbzwlontup.supabase.co",
+    "sb_publishable_cjevTmosz1gAE_zXRt81CQ_Laq35vIZ"
+  );
+
+  // ── Auth guard ───────────────────────────────────────────────────────────────
+  supabaseClient.auth.getSession().then(({ data: { session } }) => {
+    if (!session) { window.location.href = "index.html"; }
+  });
+
+  // ── Stripe payment links ─────────────────────────────────────────────────────
+  // TODO: Replace these with your real Stripe Payment Link URLs.
+  // In Stripe Dashboard → Payment Links, create one link per package.
+  // Add ?client_reference_id={user_id} so you can match the payment back to the user.
+  const STRIPE_LINKS = {
+    6:  "https://buy.stripe.com/YOUR_6_SESSION_LINK",
+    10: "https://buy.stripe.com/YOUR_10_SESSION_LINK",
+  };
+
+  let selectedSessions = null;
+
+  function selectPackage(el, sessions, price) {
+    document.querySelectorAll(".pkg-card").forEach(c => c.classList.remove("selected"));
+    el.classList.add("selected");
+    selectedSessions = sessions;
+    const btn = document.getElementById("pay-btn");
+    btn.disabled = false;
+    btn.textContent = `🔒 Pay £${price} securely with Stripe`;
+  }
+
+  async function goToStripe() {
+    if (!selectedSessions) return;
+
+    // Attach the user's ID to the Stripe session so the webhook can identify them.
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const userId = session?.user?.id ?? "";
+    const link   = STRIPE_LINKS[selectedSessions] + "?client_reference_id=" + userId;
+
+    // TODO: After Stripe redirects back (success_url = onboarding.html?paid=1&sessions=N),
+    // read the query params here and skip straight to step 2.
+    // Also set up a Supabase Edge Function webhook to record the payment row automatically.
+
+    // For now, simulate payment success in dev:
+    if (link.includes("YOUR_")) {
+      alert("DEV MODE: Stripe link not configured yet.\nSkipping to step 2 for now.");
+      goToStep(2);
+      return;
+    }
+    window.location.href = link;
+  }
+
+  // ── Check if returning from Stripe ──────────────────────────────────────────
+  window.addEventListener("DOMContentLoaded", () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("paid") === "1") {
+      goToStep(2);
+    } else {
+      goToStep(1);
+    }
+  });
+
+  // ── Step navigation ──────────────────────────────────────────────────────────
+  function goToStep(n) {
+    document.querySelectorAll(".step-panel").forEach(p => p.classList.remove("active"));
+    document.getElementById("step-" + n).classList.add("active");
+    updateDots(n);
+  }
+
+  function updateDots(current) {
+    for (let i = 1; i <= 4; i++) {
+      const dot = document.getElementById("dot-" + i);
+      dot.className = "step-dot";
+      if (i < current)  dot.classList.add("done");
+      if (i === current) dot.classList.add("current");
+    }
+  }
+
+  async function completeOnboarding() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) return;
+
+    const firstName = document.getElementById("first-name").value.trim();
+    const lastName  = document.getElementById("last-name").value.trim();
+
+    // TODO: Upsert patient profile into Supabase:
+    // await supabaseClient.from("patients").upsert({
+    //   auth_user_id: session.user.id,
+    //   name: `${firstName} ${lastName}`,
+    //   email: session.user.email,
+    //   phone: document.getElementById("phone").value,
+    //   dob: document.getElementById("dob").value,
+    //   emergency_contact_name: document.getElementById("emergency-name").value,
+    //   emergency_contact_phone: document.getElementById("emergency-phone").value,
+    //   intake_reason: document.getElementById("reason").value,
+    //   intake_prior_therapy: document.getElementById("prior-therapy").value,
+    //   intake_mood: document.getElementById("mood").value,
+    //   intake_notes: document.getElementById("extra-notes").value,
+    // });
+
+    goToStep(4);
+  }
+</script>
+
+</body>
+</html>

@@ -108,7 +108,8 @@
   </div>
 
   <script>
-    const supabase = supabase.createClient(
+    const { createClient } = supabase;
+    const supabaseClient = createClient(
       "https://crdfeaktmahbzwlontup.supabase.co",
       "sb_publishable_cjevTmosz1gAE_zXRt81CQ_Laq35vIZ"
     );
@@ -116,12 +117,17 @@
     const THERAPIST_EMAIL = "therapist@example.com";
 
     async function login() {
-      const email = document.getElementById("email").value;
+      const email = document.getElementById("email").value.trim();
       const msg = document.getElementById("message");
+
+      if (!email) {
+        msg.innerHTML = "<span style='color:#ffb3b3'>Please enter your email address.</span>";
+        return;
+      }
 
       msg.innerHTML = "Sending magic link...";
 
-      const { error } = await supabase.auth.signInWithOtp({ email });
+      const { error } = await supabaseClient.auth.signInWithOtp({ email });
 
       if (error) {
         msg.innerHTML = "<span style='color:#ffb3b3'>" + error.message + "</span>";
@@ -130,15 +136,36 @@
       }
     }
 
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session) {
-        const email = session.user.email;
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      if (!session) return;
 
-        if (email === THERAPIST_EMAIL) {
-          window.location.href = "therapist.html";
-        } else {
-          window.location.href = "patient.html";
-        }
+      const email = session.user.email;
+
+      // Therapist goes straight to their dashboard
+      if (email === THERAPIST_EMAIL) {
+        window.location.href = "therapist-dashboard.html";
+        return;
+      }
+
+      // For patients: check whether they have a payment on record
+      // If yes → patient dashboard. If no → onboarding wizard.
+      const { data: payments, error } = await supabaseClient
+        .from("payments")
+        .select("id")
+        .eq("patient_id", session.user.id)   // TODO: join via patients.auth_user_id if needed
+        .limit(1);
+
+      if (error) {
+        console.error("Payment check failed:", error.message);
+        // Fail open to onboarding so the patient isn't stuck
+        window.location.href = "onboarding.html";
+        return;
+      }
+
+      if (payments && payments.length > 0) {
+        window.location.href = "patient-dashboard.html";
+      } else {
+        window.location.href = "onboarding.html";
       }
     });
   </script>

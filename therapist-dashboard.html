@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Therapist Dashboard</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Inter", Arial, sans-serif;
+      min-height: 100vh;
+      background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1950&q=80');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      color: white;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.52);
+      backdrop-filter: blur(3px);
+      z-index: 0;
+    }
+
+    .page { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 32px 20px 60px; }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+    header h1 { font-size: 22px; font-weight: 600; }
+    header p  { font-size: 14px; opacity: 0.65; margin-top: 2px; }
+    .logout-btn {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+    .logout-btn:hover { background: rgba(255,255,255,0.25); }
+
+    /* Top stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+    .stat-card {
+      background: rgba(255,255,255,0.11);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 16px;
+      padding: 22px 20px;
+      backdrop-filter: blur(12px);
+      text-align: center;
+    }
+    .stat-card .number { font-size: 40px; font-weight: 700; line-height: 1.1; }
+    .stat-card .label  { font-size: 12px; opacity: 0.7; margin-top: 5px; }
+    .stat-card.green .number { color: #7ee8a2; }
+    .stat-card.blue  .number { color: #90caff; }
+    .stat-card.amber .number { color: #ffd97d; }
+    .stat-card.red   .number { color: #ff9e9e; }
+
+    /* Section */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .section-title { font-size: 16px; font-weight: 600; opacity: 0.9; }
+
+    /* Filter tabs */
+    .tabs { display: flex; gap: 8px; }
+    .tab {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      padding: 5px 14px;
+      border-radius: 99px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .tab.active, .tab:hover { background: rgba(255,255,255,0.25); }
+
+    /* Patient table */
+    .table-card {
+      background: rgba(255,255,255,0.09);
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      overflow: hidden;
+      margin-bottom: 36px;
+    }
+    .table-card table { width: 100%; border-collapse: collapse; }
+    .table-card th {
+      text-align: left;
+      padding: 13px 18px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      opacity: 0.55;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .table-card td {
+      padding: 13px 18px;
+      font-size: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .table-card tr:last-child td { border-bottom: none; }
+    .table-card tr:hover td { background: rgba(255,255,255,0.04); cursor: pointer; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-active   { background: rgba(126,232,162,0.18); color: #7ee8a2; border: 1px solid rgba(126,232,162,0.35); }
+    .badge-inactive { background: rgba(180,180,180,0.15); color: #ccc;    border: 1px solid rgba(180,180,180,0.25); }
+    .badge-new      { background: rgba(144,202,255,0.18); color: #90caff; border: 1px solid rgba(144,202,255,0.35); }
+
+    /* Progress mini */
+    .mini-bar-wrap { background: rgba(255,255,255,0.15); border-radius: 99px; height: 5px; width: 80px; display: inline-block; vertical-align: middle; margin-left: 8px; }
+    .mini-bar      { height: 5px; border-radius: 99px; background: #7ee8a2; }
+
+    /* Today's schedule */
+    .schedule-card {
+      background: rgba(255,255,255,0.09);
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      padding: 0;
+      overflow: hidden;
+    }
+    .schedule-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .schedule-item:last-child { border-bottom: none; }
+    .schedule-time { font-size: 13px; font-weight: 600; color: #90caff; min-width: 60px; }
+    .schedule-name { font-size: 14px; font-weight: 500; }
+    .schedule-sub  { font-size: 12px; opacity: 0.6; margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <header>
+    <div>
+      <h1>Therapist Dashboard</h1>
+      <p>Dr. James Harlow · <span id="today-date"></span></p>
+    </div>
+    <button class="logout-btn" onclick="logout()">Sign out</button>
+  </header>
+
+  <!-- Top-level stats -->
+  <div class="stats-grid">
+    <div class="stat-card green">
+      <div class="number">8</div>
+      <div class="label">Active patients</div>
+    </div>
+    <div class="stat-card">
+      <div class="number">4</div>
+      <div class="label">Inactive / past patients</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="number">12</div>
+      <div class="label">Total patients (all time)</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="number">186</div>
+      <div class="label">Sessions completed (all time)</div>
+    </div>
+    <div class="stat-card">
+      <div class="number">47</div>
+      <div class="label">Sessions remaining (across all active)</div>
+    </div>
+    <div class="stat-card">
+      <div class="number">24</div>
+      <div class="label">Sessions this month</div>
+    </div>
+  </div>
+
+  <!-- Today's schedule -->
+  <div class="section-header">
+    <div class="section-title">Today's schedule</div>
+  </div>
+  <div class="schedule-card" style="margin-bottom:36px;">
+    <div class="schedule-item">
+      <div class="schedule-time">10:00</div>
+      <div>
+        <div class="schedule-name">Sarah Johnson</div>
+        <div class="schedule-sub">Video call · 50 min · Session 8 of 10</div>
+      </div>
+    </div>
+    <div class="schedule-item">
+      <div class="schedule-time">11:30</div>
+      <div>
+        <div class="schedule-name">Marcus Webb</div>
+        <div class="schedule-sub">In-person · 50 min · Session 3 of 6</div>
+      </div>
+    </div>
+    <div class="schedule-item">
+      <div class="schedule-time">14:00</div>
+      <div>
+        <div class="schedule-name">Priya Sharma</div>
+        <div class="schedule-sub">Video call · 50 min · Session 5 of 10</div>
+      </div>
+    </div>
+    <div class="schedule-item">
+      <div class="schedule-time">16:00</div>
+      <div>
+        <div class="schedule-name">Tom Kieran</div>
+        <div class="schedule-sub">Video call · 50 min · Session 1 of 6 (New patient)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Patient list -->
+  <div class="section-header">
+    <div class="section-title">All patients</div>
+    <div class="tabs">
+      <button class="tab active" onclick="filterTable('all', this)">All</button>
+      <button class="tab" onclick="filterTable('active', this)">Active</button>
+      <button class="tab" onclick="filterTable('inactive', this)">Inactive</button>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Status</th>
+          <th>Package</th>
+          <th>Completed</th>
+          <th>Remaining</th>
+          <th>Progress</th>
+          <th>Last session</th>
+          <th>Started</th>
+        </tr>
+      </thead>
+      <tbody id="patient-table"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  const { createClient } = supabase;
+  const supabaseClient = createClient(
+    "https://crdfeaktmahbzwlontup.supabase.co",
+    "sb_publishable_cjevTmosz1gAE_zXRt81CQ_Laq35vIZ"
+  );
+
+  const THERAPIST_EMAIL = "therapist@example.com";
+
+  // ── Auth guard ───────────────────────────────────────────────────────────────
+  supabaseClient.auth.getSession().then(({ data: { session } }) => {
+    if (!session || session.user.email !== THERAPIST_EMAIL) {
+      window.location.href = "index.html";
+    }
+  });
+
+  async function logout() {
+    await supabaseClient.auth.signOut();
+    window.location.href = "index.html";
+  }
+
+  // ── Date header ──────────────────────────────────────────────────────────────
+  document.getElementById("today-date").textContent = new Date().toLocaleDateString("en-GB", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
+
+  // ── Mock data ────────────────────────────────────────────────────────────────
+  // TODO: Replace with:
+  //   const { data: patients } = await supabaseClient.from("patients")
+  //     .select("*, sessions(count), payments(sessions_purchased)")
+  const PATIENTS = [
+    { name:"Sarah Johnson",   status:"active",   package:10, completed:7,  lastSession:"05 Jun 2026", started:"10 Apr 2026" },
+    { name:"Marcus Webb",     status:"active",   package:6,  completed:2,  lastSession:"08 Jun 2026", started:"29 May 2026" },
+    { name:"Priya Sharma",    status:"active",   package:10, completed:4,  lastSession:"01 Jun 2026", started:"24 Apr 2026" },
+    { name:"Tom Kieran",      status:"new",      package:6,  completed:0,  lastSession:"—",           started:"11 Jun 2026" },
+    { name:"Laura Finch",     status:"active",   package:10, completed:9,  lastSession:"09 Jun 2026", started:"10 Feb 2026" },
+    { name:"Daniel Park",     status:"active",   package:6,  completed:3,  lastSession:"04 Jun 2026", started:"15 May 2026" },
+    { name:"Amelia Torres",   status:"active",   package:10, completed:6,  lastSession:"03 Jun 2026", started:"20 Mar 2026" },
+    { name:"Chris Okafor",    status:"active",   package:6,  completed:5,  lastSession:"07 Jun 2026", started:"02 May 2026" },
+    { name:"Natalie Burns",   status:"inactive", package:10, completed:10, lastSession:"14 Mar 2026", started:"10 Jan 2026" },
+    { name:"Raj Patel",       status:"inactive", package:6,  completed:6,  lastSession:"22 Feb 2026", started:"20 Nov 2025" },
+    { name:"Hannah Miles",    status:"inactive", package:10, completed:10, lastSession:"05 Jan 2026", started:"01 Sep 2025" },
+    { name:"Owen Clarke",     status:"inactive", package:6,  completed:6,  lastSession:"18 Apr 2026", started:"10 Feb 2026" },
+  ];
+
+  let currentFilter = "all";
+
+  function filterTable(filter, btn) {
+    currentFilter = filter;
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    btn.classList.add("active");
+    renderTable();
+  }
+
+  function renderTable() {
+    const filtered = currentFilter === "all" ? PATIENTS : PATIENTS.filter(p => p.status === currentFilter);
+    const tbody = document.getElementById("patient-table");
+    tbody.innerHTML = filtered.map(p => {
+      const remaining = p.package - p.completed;
+      const pct = Math.round((p.completed / p.package) * 100);
+      return `
+        <tr data-status="${p.status}">
+          <td><strong>${p.name}</strong></td>
+          <td><span class="badge badge-${p.status}">${capitalise(p.status)}</span></td>
+          <td>${p.package} sessions</td>
+          <td>${p.completed}</td>
+          <td>${remaining > 0 ? remaining : "—"}</td>
+          <td>
+            <span style="font-size:12px;opacity:0.7;">${pct}%</span>
+            <span class="mini-bar-wrap"><span class="mini-bar" style="width:${pct}%"></span></span>
+          </td>
+          <td style="opacity:0.75;">${p.lastSession}</td>
+          <td style="opacity:0.75;">${p.started}</td>
+        </tr>`;
+    }).join("");
+  }
+
+  function capitalise(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  renderTable();
+</script>
+
+</body>
+</html>
