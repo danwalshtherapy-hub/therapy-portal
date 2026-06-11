@@ -288,11 +288,10 @@
   );
 
   // ── Auth guard ───────────────────────────────────────────────────────────────
-  const DEV = new URLSearchParams(window.location.search).get("dev") === "1";
-
-  supabaseClient.auth.getSession().then(({ data: { session } }) => {
-    if (!session && !DEV) { window.location.href = "index.html"; }
-  });
+  // TODO: Re-enable auth guard before launch:
+  // supabaseClient.auth.getSession().then(({ data: { session } }) => {
+  //   if (!session) { window.location.href = "index.html"; }
+  // });
 
   // ── Stripe payment links ─────────────────────────────────────────────────────
   // TODO: Replace these with your real Stripe Payment Link URLs.

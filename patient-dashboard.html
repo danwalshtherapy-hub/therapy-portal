@@ -206,16 +206,14 @@
   );
 
   // ── Auth guard ───────────────────────────────────────────────────────────────
-  const DEV = new URLSearchParams(window.location.search).get("dev") === "1";
-
-  supabaseClient.auth.getSession().then(({ data: { session } }) => {
-    if (!session && !DEV) {
-      window.location.href = "index.html";
-      return;
-    }
-    document.getElementById("patient-email").textContent = DEV ? "dev@preview.local" : session.user.email;
-    loadDashboard(DEV ? {} : session.user);
-  });
+  // TODO: Re-enable auth guard before launch:
+  // supabaseClient.auth.getSession().then(({ data: { session } }) => {
+  //   if (!session) { window.location.href = "index.html"; return; }
+  //   document.getElementById("patient-email").textContent = session.user.email;
+  //   loadDashboard(session.user);
+  // });
+  document.getElementById("patient-email").textContent = "dev@preview.local";
+  loadDashboard({});
 
   async function logout() {
     await supabaseClient.auth.signOut();
