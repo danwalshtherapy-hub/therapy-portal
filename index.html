@@ -10,25 +10,23 @@
       margin: 0;
       padding: 0;
       font-family: "Inter", Arial, sans-serif;
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-
-      /* Calming beach background */
-      background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1950&q=80');
-      background-size: cover;
-      background-position: center;
+      background: #1d3b40;
       position: relative;
+      overflow: hidden;
     }
 
-    /* Dark overlay */
-    body::before {
-      content: "";
-      position: absolute;
+    /* Botanical SVG background */
+    .botanical-bg {
+      position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.45);
-      backdrop-filter: blur(2px);
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
     }
 
     /* Login card */
@@ -97,6 +95,57 @@
 
 <body>
 
+  <!-- Botanical background -->
+  <svg class="botanical-bg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- Monstera leaf (fill-rule evenodd cuts fenestration holes) -->
+      <path id="monstera" fill-rule="evenodd" d="
+        M 0,0
+        C 55,-15 95,-45 100,-85 C 105,-125 55,-138 28,-148
+        C 72,-158 105,-180 100,-212 C 95,-244 48,-255 22,-265
+        C 52,-282 68,-304 52,-332 C 36,-358 18,-366 0,-370
+        C -18,-366 -36,-358 -52,-332 C -68,-304 -52,-282 -22,-265
+        C -48,-255 -95,-244 -100,-212 C -105,-180 -72,-158 -28,-148
+        C -55,-138 -105,-125 -100,-85 C -95,-45 -55,-15 0,0 Z
+        M 52,-108 A 22,16 0 1,0 52.1,-108 Z
+        M -52,-108 A 22,16 0 1,0 -52.1,-108 Z
+        M 34,-218 A 18,13 0 1,0 34.1,-218 Z
+        M -34,-218 A 18,13 0 1,0 -34.1,-218 Z
+      "/>
+      <!-- Palm frond leaf — single elongated blade -->
+      <path id="palm-blade" d="M 0,0 C 8,-40 10,-90 4,-140 C 2,-160 -2,-160 -4,-140 C -10,-90 -8,-40 0,0 Z"/>
+    </defs>
+
+    <!-- Monstera leaves -->
+    <use href="#monstera" transform="translate(140,820) scale(1.6)"               fill="rgba(255,255,255,0.18)"/>
+    <use href="#monstera" transform="translate(60,700)  scale(1.0)"               fill="rgba(255,255,255,0.12)"/>
+    <use href="#monstera" transform="translate(1080,800) scale(1.4) scale(-1,1)"  fill="rgba(255,255,255,0.18)"/>
+    <use href="#monstera" transform="translate(1160,660) scale(0.9) scale(-1,1)"  fill="rgba(255,255,255,0.11)"/>
+    <use href="#monstera" transform="translate(600,850) scale(0.8)"               fill="rgba(255,255,255,0.08)"/>
+
+    <!-- Palm fronds — bottom left cluster -->
+    <g transform="translate(30,820)" fill="rgba(255,255,255,0.20)">
+      <use href="#palm-blade" transform="rotate(-50) scale(1,2.6)"/>
+      <use href="#palm-blade" transform="rotate(-35) scale(1,3.0)"/>
+      <use href="#palm-blade" transform="rotate(-20) scale(1,3.3)"/>
+      <use href="#palm-blade" transform="rotate(-5)  scale(1,3.1)"/>
+      <use href="#palm-blade" transform="rotate(12)  scale(1,2.7)"/>
+    </g>
+
+    <!-- Palm fronds — bottom right cluster -->
+    <g transform="translate(1170,820)" fill="rgba(255,255,255,0.20)">
+      <use href="#palm-blade" transform="rotate(50)  scale(1,2.6)"/>
+      <use href="#palm-blade" transform="rotate(35)  scale(1,3.0)"/>
+      <use href="#palm-blade" transform="rotate(20)  scale(1,3.3)"/>
+      <use href="#palm-blade" transform="rotate(5)   scale(1,3.1)"/>
+      <use href="#palm-blade" transform="rotate(-12) scale(1,2.7)"/>
+    </g>
+
+    <!-- Top corner accents -->
+    <use href="#monstera" transform="translate(0,180) scale(0.75) rotate(30)"              fill="rgba(255,255,255,0.10)"/>
+    <use href="#monstera" transform="translate(1200,160) scale(0.75) rotate(-30) scale(-1,1)" fill="rgba(255,255,255,0.10)"/>
+  </svg>
+
   <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:20px;">
 
     <div class="card">
@@ -107,16 +156,6 @@
       <button onclick="login()">Send Login Link</button>
 
       <div id="message"></div>
-    </div>
-
-    <!-- DEV BYPASS — remove before going live -->
-    <div style="text-align:center;">
-      <p style="color:rgba(255,255,255,0.4);font-size:11px;margin-bottom:8px;font-family:monospace;">⚠ DEV BYPASS — remove before launch</p>
-      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-        <a href="therapist-dashboard.html?dev=1" style="background:rgba(255,200,80,0.25);border:1px solid rgba(255,200,80,0.5);color:#ffd97d;padding:7px 14px;border-radius:8px;font-size:13px;text-decoration:none;">Therapist dashboard</a>
-        <a href="patient-dashboard.html?dev=1"   style="background:rgba(126,232,162,0.2);border:1px solid rgba(126,232,162,0.4);color:#7ee8a2;padding:7px 14px;border-radius:8px;font-size:13px;text-decoration:none;">Patient dashboard</a>
-        <a href="onboarding.html?dev=1"          style="background:rgba(144,202,255,0.2);border:1px solid rgba(144,202,255,0.4);color:#90caff;padding:7px 14px;border-radius:8px;font-size:13px;text-decoration:none;">Onboarding wizard</a>
-      </div>
     </div>
 
   </div>
